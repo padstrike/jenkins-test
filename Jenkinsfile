@@ -1,22 +1,25 @@
 pipeline {
     agent any 
 
+    environment {
+        DOCKER_CREDENTIALS = credentials('admin') // Using credentials from Jenkins credentials manager
+    }
+
     stages {
         stage('Checkout') {
             steps {
-                checkout scm 
+                checkout scm  // No credentials needed for public repo
             }
         }
 
         stage('Build and Push Image') {
             steps {
                 script {
-                    // Building the Docker image and push to Docker Hub (or any other registry)
                     sh '''
-                        docker build -t jenkins-test:latest .
-                        docker tag jenkins-test:latest yourusername/jenkins-test:latest
-                        docker login -u yourusername -p yourpassword
-                        docker push yourusername/jenkins-test:latest
+                        docker build -t myapp:latest .
+                        docker tag myapp:latest $DOCKER_CREDENTIALS_USR/myapp:latest
+                        echo "$DOCKER_CREDENTIALS_PSW" | docker login -u $DOCKER_CREDENTIALS_USR --password-stdin
+                        docker push $DOCKER_CREDENTIALS_USR/myapp:latest
                     '''
                 }
             }
@@ -25,15 +28,16 @@ pipeline {
         stage('Update Application Container') {
             steps {
                 script {
-                    // Pulling the new image and update the container
+                    // Pulling the new image and updating the container
                     sh '''
-                        docker pull yourusername/jenkins-test:latest
+                        docker pull tuer12033/jenkins-test:latest
                         docker stop jenkins-test-container || true
                         docker rm jenkins-test-container || true
-                        docker run -d -p 3000:3000 --name jenkins-test-container yourusername/jenkins-test:latest
+                        docker run -d -p 3000:3000 --name jenkins-test-container tuer12033/jenkins-test:latest
                     '''
                 }
             }
         }
+                // ... other stages as needed
     }
 }
