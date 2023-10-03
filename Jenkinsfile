@@ -4,7 +4,6 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                // Get the latest code from the version control system.
                 checkout scm 
             }
         }
@@ -12,10 +11,12 @@ pipeline {
         stage('Build and Push Image') {
             steps {
                 script {
-                    // Build and push the Docker image with a new tag.
+                    // Building the Docker image and push to Docker Hub (or any other registry)
                     sh '''
                         docker build -t jenkins-test:latest .
-                        docker push jenkins-test:latest
+                        docker tag jenkins-test:latest yourusername/jenkins-test:latest
+                        docker login -u yourusername -p yourpassword
+                        docker push yourusername/jenkins-test:latest
                     '''
                 }
             }
@@ -24,13 +25,12 @@ pipeline {
         stage('Update Application Container') {
             steps {
                 script {
-                    // Update the running application container.
-                    // This might involve stopping the old container, pulling the new image, and starting a new container.
+                    // Pulling the new image and update the container
                     sh '''
-                        docker pull jenkins-test:latest
-                        docker stop jenkins-test-container
-                        docker rm jenkins-test-container
-                        docker run -d -p 3000:3000 --name jenkins-test-container jenkins-test:latest
+                        docker pull yourusername/jenkins-test:latest
+                        docker stop jenkins-test-container || true
+                        docker rm jenkins-test-container || true
+                        docker run -d -p 3000:3000 --name jenkins-test-container yourusername/jenkins-test:latest
                     '''
                 }
             }
