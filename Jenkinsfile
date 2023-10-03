@@ -1,37 +1,69 @@
 pipeline {
-    agent any 
     
+    agent any  
+
     stages {
-        stage('Check Node & NPM') {
+
+        stage('Init'){
             steps {
-                sh '''
-                    node -v
-                    npm -v
-                '''
+                echo 'Init'
+                echo '******************************'
             }
         }
 
-        stage('Checkout') {
+        stage('Yarn Install') {
             steps {
-                checkout scm 
+                echo 'Yarn Install'
+                echo '******************************'
             }
         }
 
-        stage('Install') {
+        stage('Yarn Build') {
             steps {
-                sh 'npm install'
+                echo 'Yarn Build'
+                echo '******************************'
+            }
+        }
+        
+        stage('Mvn Install') {
+            steps {
+                echo 'Mvn Install'
+                echo '******************************'
+            }
+        }
+        
+        stage('Mvn Test') {
+            steps {
+                echo 'Mvn Test'
+                echo '******************************'
+            }
+        }
+        
+        stage('Docker Build Image') {
+            steps {
+                echo 'Docker Build Image'
+                echo '******************************'
+            }
+        }
+        
+        stage('Docker Push') {
+            steps {
+                echo 'Docker Push'
+                echo '******************************'
+            }
+        }
+        
+        stage('Docker Remove Image') {
+            steps {
+                echo 'Docker Remove Image'
+                echo '******************************'
             }
         }
 
-        stage('Test') {
-            steps {
-                sh 'npm test'
-            }
-        }
-
-        stage('Build') {
-            steps {
-                sh 'npm run build'
+        stage('Deploy') {
+            steps{
+                echo 'Deploy'
+                echo '******************************'
             }
         }
     }
