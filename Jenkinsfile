@@ -16,10 +16,10 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        docker build -t myapp:latest .
-                        docker tag myapp:latest $DOCKER_CREDENTIALS_USR/myapp:latest
+                        docker build -t jenkins-test:latest .
+                        docker tag jenkins-test:latest $DOCKER_CREDENTIALS_USR/jenkins-test:latest
                         echo "$DOCKER_CREDENTIALS_PSW" | docker login -u $DOCKER_CREDENTIALS_USR --password-stdin
-                        docker push $DOCKER_CREDENTIALS_USR/myapp:latest
+                        docker push $DOCKER_CREDENTIALS_USR/jenkins-test:latest
                     '''
                 }
             }
