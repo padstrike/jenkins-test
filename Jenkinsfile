@@ -1,69 +1,26 @@
 pipeline {
-    
-    agent any  
+    agent any 
 
     stages {
-
-        stage('Init'){
+        stage('Checkout') {
             steps {
-                echo 'Init'
-                echo '******************************'
+                checkout scm 
             }
         }
 
-        stage('Yarn Install') {
+        stage('Build Docker Image') {
             steps {
-                echo 'Yarn Install'
-                echo '******************************'
+                script {
+                    def appImage = docker.build("myapp:latest")
+                }
             }
         }
 
-        stage('Yarn Build') {
+        stage('Run Docker Container') {
             steps {
-                echo 'Yarn Build'
-                echo '******************************'
-            }
-        }
-        
-        stage('Mvn Install') {
-            steps {
-                echo 'Mvn Install'
-                echo '******************************'
-            }
-        }
-        
-        stage('Mvn Test') {
-            steps {
-                echo 'Mvn Test'
-                echo '******************************'
-            }
-        }
-        
-        stage('Docker Build Image') {
-            steps {
-                echo 'Docker Build Image'
-                echo '******************************'
-            }
-        }
-        
-        stage('Docker Push') {
-            steps {
-                echo 'Docker Push'
-                echo '******************************'
-            }
-        }
-        
-        stage('Docker Remove Image') {
-            steps {
-                echo 'Docker Remove Image'
-                echo '******************************'
-            }
-        }
-
-        stage('Deploy') {
-            steps{
-                echo 'Deploy'
-                echo '******************************'
+                script {
+                    docker.image('myapp:latest').run("-p 3000:3000")
+                }
             }
         }
     }
