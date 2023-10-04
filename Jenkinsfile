@@ -2,13 +2,13 @@ pipeline {
     agent any 
 
     environment {
-        DOCKER_CREDENTIALS = credentials('admin') // Using credentials from Jenkins credentials manager
+        DOCKER_CREDENTIALS = credentials('admin') 
     }
 
     stages {
         stage('Checkout') {
             steps {
-                checkout scm  // No credentials needed for public repo
+                checkout scm  
             }
         }
 
@@ -16,9 +16,13 @@ pipeline {
             steps {
                 script {
                     sh '''
+                        echo "Building Image..."
                         docker build -t jenkins-test:latest .
+                        echo "Tagging Image..."
                         docker tag jenkins-test:latest $DOCKER_CREDENTIALS_USR/jenkins-test:latest
+                        echo "Logging in to Docker Hub..."
                         echo "$DOCKER_CREDENTIALS_PSW" | docker login -u $DOCKER_CREDENTIALS_USR --password-stdin
+                        echo "Pushing Image..."
                         docker push $DOCKER_CREDENTIALS_USR/jenkins-test:latest
                     '''
                 }
@@ -28,16 +32,18 @@ pipeline {
         stage('Update Application Container') {
             steps {
                 script {
-                    // Pulling the new image and updating the container
                     sh '''
-                        docker pull tuer12033/jenkins-test:latest
+                        echo "Pulling Image..."
+                        docker pull $DOCKER_CREDENTIALS_USR/jenkins-test:latest
+                        echo "Stopping Existing Container..."
                         docker stop jenkins-test-container || true
+                        echo "Removing Existing Container..."
                         docker rm jenkins-test-container || true
-                        docker run -d -p 3000:3000 --name jenkins-test-container tuer12033/jenkins-test:latest
+                        echo "Running New Container..."
+                        docker run -d -p 3000:3000 --name jenkins-test-container $DOCKER_CREDENTIALS_USR/jenkins-test:latest
                     '''
                 }
             }
         }
-                // ... other stages as needed
     }
 }
