@@ -15,7 +15,7 @@ pipeline {
         stage('Build and Push Image') {
             steps {
                 script {
-                    bat '''
+                    sh '''
                         docker build -t jenkins-test:latest .
                         docker tag jenkins-test:latest $DOCKER_CREDENTIALS_USR/jenkins-test:latest
                         echo "$DOCKER_CREDENTIALS_PSW" | docker login -u $DOCKER_CREDENTIALS_USR --password-stdin
@@ -29,8 +29,8 @@ pipeline {
             steps {
                 script {
                     // Pulling the new image and updating the container
-                    bat '''
-                        docker pull tuer12033/jenkins-test:latests
+                    sh '''
+                        docker pull tuer12033/jenkins-test:latest
                         docker stop jenkins-test-container || true
                         docker rm jenkins-test-container || true
                         docker run -d -p 3000:3000 --name jenkins-test-container tuer12033/jenkins-test:latest
