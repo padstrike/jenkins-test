@@ -7,7 +7,7 @@ COPY . ./
 RUN npm run build
 
 # Step 2: Serve the React application using a lightweight node image and serve package
-FROM node:16-alpine
+FROM node:16
 WORKDIR /app
 COPY --from=build /app/build /app/build
 RUN npm install -g serve
