@@ -3,9 +3,6 @@ pipeline {
 
     environment {
         DOCKER_CREDENTIALS = credentials('admin') 
-        IMAGE_NAME = "jenkins-test"
-        IMAGE_TAG = "latest"
-        FULL_IMAGE_NAME = "${DOCKER_CREDENTIALS_USR}/${IMAGE_NAME}:${IMAGE_TAG}"
     }
 
     stages {
@@ -18,13 +15,16 @@ pipeline {
         stage('Build and Push Image') {
             steps {
                 script {
-                    def dockerImage
-                    echo "Building Image..."
-                    dockerImage = docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
-
-                    echo "Tagging Image..."
-                    dockerImage.push("${IMAGE_TAG}")
-                    dockerImage.push("latest")
+                    sh '''
+                        echo "Building Image..."
+                        docker build -t jenkins-test:latest .
+                        echo "Tagging Image..."
+                        docker tag jenkins-test:latest $DOCKER_CREDENTIALS_USR/jenkins-test:latest
+                        echo "Logging in to Docker Hub..."
+                        echo "$DOCKER_CREDENTIALS_PSW" | docker login -u $DOCKER_CREDENTIALS_USR --password-stdin
+                        echo "Pushing Image..."
+                        docker push $DOCKER_CREDENTIALS_USR/jenkins-test:latest
+                    '''
                 }
             }
         }
@@ -32,16 +32,16 @@ pipeline {
         stage('Update Application Container') {
             steps {
                 script {
-                    echo "Pulling Image..."
-                    docker.image("${FULL_IMAGE_NAME}").pull()
-
-                    echo "Stopping Existing Container..."
-                    sh 'docker stop jenkins-test-container || true'
-                    echo "Removing Existing Container..."
-                    sh 'docker rm jenkins-test-container || true'
-
-                    echo "Running New Container..."
-                    docker.run("--name jenkins-test-container -p 3000:3000", "${FULL_IMAGE_NAME}")
+                    sh '''
+                        echo "Pulling Image..."
+                        docker pull $DOCKER_CREDENTIALS_USR/jenkins-test:latest
+                        echo "Stopping Existing Container..."
+                        docker stop jenkins-test-container || true
+                        echo "Removing Existing Container..."
+                        docker rm jenkins-test-container || true
+                        echo "Running New Container..."
+                        docker run -d -p 3000:3000 --name jenkins-test-container $DOCKER_CREDENTIALS_USR/jenkins-test:latest
+                    '''
                 }
             }
         }
