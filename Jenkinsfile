@@ -2,48 +2,82 @@ pipeline {
     agent any 
 
     environment {
-        DOCKER_CREDENTIALS = credentials('admin') 
+        BUILD_VERSION = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("YYYYMMddHHmmss"))
+    }
+
+    parameters {
+        string(name: 'BRANCH_NAME', defaultValue: 'master', description: 'Name of the branch to build')
     }
 
     stages {
         stage('Checkout') {
             steps {
-                checkout scm  
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: "${params.BRANCH_NAME}"]],
+                    userRemoteConfigs: [
+                        [
+                            // credentialsId: 'your-credentials-id'
+                            , url: 'https://github.com/padstrike/jenkins-test.git'
+                        ]
+                    ]
+                ])
             }
         }
 
-        stage('Build and Push Image') {
+        stage('Build & Test') {
             steps {
-                script {
-                    sh '''
-                        echo "Building Image..."
-                        docker build -t jenkins-test:latest .
-                        echo "Tagging Image..."
-                        docker tag jenkins-test:latest $DOCKER_CREDENTIALS_USR/jenkins-test:latest
-                        echo "Logging in to Docker Hub..."
-                        echo "$DOCKER_CREDENTIALS_PSW" | docker login -u $DOCKER_CREDENTIALS_USR --password-stdin
-                        echo "Pushing Image..."
-                        docker push $DOCKER_CREDENTIALS_USR/jenkins-test:latest
-                    '''
-                }
-            }
-        }
-
-        stage('Update Application Container') {
-            steps {
-                script {
-                    sh '''
-                        echo "Pulling Image..."
-                        docker pull $DOCKER_CREDENTIALS_USR/jenkins-test:latest
-                        echo "Stopping Existing Container..."
-                        docker stop jenkins-test-container || true
-                        echo "Removing Existing Container..."
-                        docker rm jenkins-test-container || true
-                        echo "Running New Container..."
-                        docker run -d -p 3000:3000 --name jenkins-test-container $DOCKER_CREDENTIALS_USR/jenkins-test:latest
-                    '''
-                }
+                // Add your build and test steps here
+                echo "Building ${params.BRANCH_NAME} branch."
             }
         }
     }
 }
+
+node {
+    def branchName = params.BRANCH_NAME
+    
+    stage("Deploy - ${branchName}") {
+        when {
+            expression { 
+                branchName in ['develop', 'feature', 'hotfix', 'master', 'qa', 'test-uat'] 
+            }
+        }
+
+        steps {
+            script {
+                echo "Deploying ${branchName} branch."
+                
+                if (branchName == 'develop') {
+                    echo 'Deploying to Development Environment'
+                    // Insert your deployment steps for the develop branch
+                } else if (branchName.startsWith('feature/')) {
+                    echo 'Deploying Feature Branch to Feature Environment'
+                    // Insert your deployment steps for feature branches
+                } else if (branchName.startsWith('hotfix/')) {
+                    echo 'Deploying Hotfix to Hotfix Environment'
+                    // Insert your deployment steps for hotfix branches
+                } else if (branchName == 'master') {
+                    echo 'Deploying to Production Environment'
+                    // Insert your deployment steps for the master branch
+                } else if (branchName == 'qa') {
+                    echo 'Deploying to QA Environment'
+                    // Insert your deployment steps for the QA branch
+                } else if (branchName == 'test-uat') {
+                    echo 'Deploying to UAT Environment'
+                    // Insert your deployment steps for the test-uat branch
+                } else {
+                    echo 'Branch not recognized for deployment'
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo 'This will always be executed.'
+            // Add steps to perform actions that should always be executed, regardless of the build status
+        }
+    }
+}
+
