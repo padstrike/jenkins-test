@@ -1,5 +1,5 @@
 pipeline {
-    agent any 
+    agent any
 
     parameters {
         choice(name: 'ACTION', choices: ['Build', 'Deploy', 'Hotfix', 'Feature', 'Bugfix'], description: 'What action to perform')
@@ -10,17 +10,17 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                checkout scm 
+                checkout scm
             }
         }
-        
+
         stage('Build') {
             when {
                 expression { params.ACTION == 'Build' }
             }
             steps {
                 echo 'Building the application'
-                // Insert build steps here
+            // Insert build steps here
             }
         }
 
@@ -30,7 +30,7 @@ pipeline {
             }
             steps {
                 echo 'Deploying version: ' + params.VERSION
-                // Insert deploy steps here
+            // Insert deploy steps here
             }
         }
 
@@ -40,7 +40,7 @@ pipeline {
             }
             steps {
                 echo 'Applying hotfix for version: ' + params.VERSION
-                // Insert hotfix steps here
+            // Insert hotfix steps here
             }
         }
 
@@ -50,7 +50,7 @@ pipeline {
             }
             steps {
                 echo 'Building feature for issue: ' + params.ISSUE_ID
-                // Insert feature build steps here
+            // Insert feature build steps here
             }
         }
 
@@ -60,21 +60,21 @@ pipeline {
             }
             steps {
                 echo 'Fixing bug for issue: ' + params.ISSUE_ID
-                // Insert bugfix steps here
+            // Insert bugfix steps here
             }
         }
-        
+
         stage('Release') {
             when {
-                // You can add a condition to trigger release, e.g. when on a certain branch
+            // You can add a condition to trigger release, e.g. when on a certain branch
             }
             steps {
                 echo 'Releasing version: ' + params.VERSION
-                // Insert release steps here, including tagging and version increment
+            // Insert release steps here, including tagging and version increment
             }
         }
     }
-    
+
     post {
         always {
             echo 'Pipeline finished'
